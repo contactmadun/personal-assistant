@@ -96,6 +96,7 @@ const newMessage = ref('');
 const isLoading = ref(false);
 // Referensi ke elemen DOM untuk auto-scrolling
 const messageContainer = ref(null);
+// const isTyping = ref(false);
 
 // --- API Endpoint ---
 // PENTING: Ganti URL ini dengan URL backend Node.js Anda yang di-deploy di Render/Railway
@@ -116,28 +117,72 @@ const sendMessage = async () => {
   newMessage.value = ''; // Kosongkan input setelah dikirim
   isLoading.value = true;
 
-  try {
-    const response = await axios.post(API_ENDPOINT, {
-      errorCode: currentMessageText,
-    });
+  // try {
+  //   const response = await axios.post(API_ENDPOINT, {
+  //     errorCode: currentMessageText,
+  //   });
     
-    const aiMessage = {
-      id: Date.now() + 1,
-      text: response.data.answer,
-      sender: 'ai',
-    };
-    messages.value.push(aiMessage);
+  //   const aiMessage = {
+  //     id: Date.now() + 1,
+  //     text: response.data.answer,
+  //     sender: 'ai',
+  //   };
+  //   messages.value.push(aiMessage);
 
-  } catch (error) {
-    const errorMessage = {
-      id: Date.now() + 1,
-      text: error.response?.data?.error || 'Maaf, terjadi kesalahan. Coba lagi nanti.',
-      sender: 'ai',
-    };
-    messages.value.push(errorMessage);
-  } finally {
-    isLoading.value = false;
-  }
+  // } catch (error) {
+  //   const errorMessage = {
+  //     id: Date.now() + 1,
+  //     text: error.response?.data?.error || 'Maaf, terjadi kesalahan. Coba lagi nanti.',
+  //     sender: 'ai',
+  //   };
+  //   messages.value.push(errorMessage);
+  // } finally {
+  //   isLoading.value = false;
+  // }
+  try {
+  const response = await axios.post(API_ENDPOINT, {
+    errorCode: currentMessageText,
+  });
+
+  // Buat pesan kosong untuk AI dulu
+  const aiMessage = {
+    id: Date.now() + 1,
+    text: '',
+    sender: 'ai',
+  };
+  messages.value.push(aiMessage);
+
+  const fullText = response.data.answer;
+  let index = 0;
+  const speed = 20; // ms per karakter
+
+  const typingInterval = setInterval(() => {
+    if (index < fullText.length) {
+      // Cari index pesan terakhir (AI message yang baru kita push)
+      const lastIndex = messages.value.findIndex(msg => msg.id === aiMessage.id);
+      if (lastIndex !== -1) {
+        // replace objek dengan versi baru agar Vue detect perubahan
+        messages.value[lastIndex] = {
+          ...messages.value[lastIndex],
+          text: messages.value[lastIndex].text + fullText[index],
+        };
+      }
+      index++;
+    } else {
+      clearInterval(typingInterval);
+    }
+  }, speed);
+
+} catch (error) {
+  const errorMessage = {
+    id: Date.now() + 1,
+    text: error.response?.data?.error || 'Maaf, terjadi kesalahan. Coba lagi nanti.',
+    sender: 'ai',
+  };
+  messages.value.push(errorMessage);
+} finally {
+  isLoading.value = false;
+}
 };
 
 // --- Lifecycle & Effects ---
