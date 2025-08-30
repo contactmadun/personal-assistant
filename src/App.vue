@@ -99,7 +99,7 @@ const messageContainer = ref(null);
 
 // --- API Endpoint ---
 // PENTING: Ganti URL ini dengan URL backend Node.js Anda yang di-deploy di Render/Railway
-const API_ENDPOINT = 'http://localhost:3000/ask';
+const API_ENDPOINT = 'http://api.personal-assistant.biz.id/ask';
 
 // --- Functions ---
 const sendMessage = async () => {
